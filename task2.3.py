@@ -59,24 +59,13 @@ def fetch_geo_data():
 
     # Find all 'pindala' elements
     pindala_elements = tree.findall('.//metsaregister:pindala', namespaces)
+    print(f'Total elements: {len(pindala_elements)}')
     pindala_values = [float(pindala.text) for pindala in pindala_elements]
 
     # Calculate total and average 'pindala'
     total_pindala = sum(pindala_values)
-    average_pindala = total_pindala / len(pindala_values) if pindala_values else 0
 
-    print(f'Total pindala: {total_pindala}')
-    print(f'Average pindala: {average_pindala}')
-
-    # Infer units of measurement based on average value
-    if average_pindala < 10:
-        units = 'hectares'
-    elif average_pindala < 10000:
-        units = 'square meters'
-    else:
-        units = 'square kilometers'
-
-    print(f'Inferred units of measurement: {units}')
+    print(f'Total area: {total_pindala}')
 
 if __name__ == "__main__":
     fetch_geo_data()
