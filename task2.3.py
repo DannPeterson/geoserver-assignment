@@ -13,7 +13,7 @@ def fetch_geo_data():
             xmlns:wfs="http://www.opengis.net/wfs"
             xsi:schemaLocation="http://www.opengis.net/wfs
             http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">
-            <wfs:Query typeName="metsaregister:eraldis" srsName="EPSG:4326">
+            <wfs:Query typeName="metsaregister:eraldis" srsName="EPSG:3301">
                 <wfs:PropertyName>metsaregister:pindala</wfs:PropertyName>
                 <ogc:Filter>
                     <ogc:And>
