@@ -158,11 +158,19 @@ def fetch_geo_data():
 
     print("Centroids saved to centroids.json")
 
-    # Making request to check centroids intersects with maakond areas
-    intersect_count = 0
-
+    # Making a batch request to check centroids intersections with maakond areas
+    point_conditions = ""
     for centroid in centroids:
-        intersection_query_xml = f'''
+        point_conditions += f'''
+                <ogc:Intersects>
+                    <ogc:PropertyName>shape</ogc:PropertyName>
+                    <gml:Point srsName="urn:ogc:def:crs:EPSG::3301">
+                        <gml:pos>{centroid.x} {centroid.y}</gml:pos>
+                    </gml:Point>
+                </ogc:Intersects>
+            '''
+
+    intersection_query_xml = f'''
             <GetFeature service="WFS" version="1.1.0"
                 xmlns="http://www.opengis.net/wfs"
                 xmlns:gml="http://www.opengis.net/gml"
@@ -171,30 +179,28 @@ def fetch_geo_data():
                 xsi:schemaLocation="http://www.opengis.net/wfs
                 http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">
                 <Query typeName="ehak:maakondade_piirid">
-                    <PropertyName>fid</PropertyName>
-                    <PropertyName>maakond</PropertyName>
                     <ogc:Filter>
-                        <ogc:Intersects>
-                            <ogc:PropertyName>shape</ogc:PropertyName>
-                            <gml:Point srsName="urn:ogc:def:crs:EPSG::3301">
-                                <gml:pos>{centroid.x} {centroid.y}</gml:pos>
-                            </gml:Point>
-                        </ogc:Intersects>
+                        <ogc:Or>
+                            {point_conditions}
+                        </ogc:Or>
                     </ogc:Filter>
                 </Query>
             </GetFeature>
-            '''
+        '''
 
-        response = requests.post(url, headers=headers, data=intersection_query_xml)
-        if response.status_code == 200:
-            xml_response = response.content.decode('utf-8')
-            matches = re.findall(r'<ehak:maakond>(.*?)</ehak:maakond>', xml_response)
-            if matches and 'Lääne maakond':
-                intersect_count += 1
-                for match in matches:
-                    print(f'Centroid {centroid.x}, {centroid.y} located in maakond: {match}')
+    # Send the intersection request
+    response = requests.post(url, headers=headers, data=intersection_query_xml)
+    if response.status_code != 200:
+        print(f'Error in intersection request: {response.status_code}')
+        return
 
-    print(f'Amount of centroids that located in Lääne maakond: {intersect_count}')
+    # Process the intersection response
+    xml_response = response.content.decode('utf-8')
+    matches = re.findall(r'<ehak:maakond>(.*?)</ehak:maakond>', xml_response)
+
+    intersect_count = sum(1 for match in matches if match == 'Lääne maakond')
+
+    print(f'Amount of centroids located in Lääne maakond: {intersect_count}')
 
 if __name__ == "__main__":
     fetch_geo_data()
